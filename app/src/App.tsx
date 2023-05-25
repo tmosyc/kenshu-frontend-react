@@ -8,11 +8,11 @@ const fetchList = () =>
 
 export const App = () => {
   const queryClient = useQueryClient();
-  const [id, setId] = useState("");
+  const [id, setId] = useState({ id: "", changeType: "" });
   const [text, setText] = useState("");
   const now = new Date();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: fetchList,
   });
@@ -32,15 +32,15 @@ export const App = () => {
     axios({
       method: "patch",
       url: `http://localhost:8000/api/tasks/${taskId}`,
-      data: { title: text, finishedAt: now },
+      data: { title: text, finishedAt: null },
     });
   };
 
   const updateText = (taskId, taskTitle) => {
-    if (id === taskId) {
+    if (id.id === taskId && id.changeType === "update") {
       return (
         <StrictMode>
-          <form onSubmit={updateTask(taskId)}>
+          <form onSubmit={() => updateTask(taskId)}>
             <input
               type="text"
               placeholder={taskTitle}
@@ -50,6 +50,15 @@ export const App = () => {
         </StrictMode>
       );
     }
+  };
+
+  const finish = async (taskId: string) => {
+    await axios({
+      method: "patch",
+      url: `http://localhost:8000/api/tasks/${taskId}`,
+      data: { finishedAt: now },
+    });
+    refetch();
   };
 
   return (
@@ -65,13 +74,26 @@ export const App = () => {
         </button>
         {data.tasks.map((task) => (
           <li className={classNames.title} key={task.id}>
-            {task.title}
+            <p
+              className={
+                task.finishedAt !== null ? classNames.completeText : ""
+              }
+            >
+              {task.title}
+            </p>
             <button
               className={classNames.updateButton}
-              onClick={() => setId(task.id)}
+              onClick={() => setId({ id: task.id, changeType: "update" })}
             >
               {updateText(task.id, task.title)}
               編集
+            </button>
+
+            <button
+              className={classNames.completeButton}
+              onClick={() => finish(task.id)}
+            >
+              完了
             </button>
           </li>
         ))}

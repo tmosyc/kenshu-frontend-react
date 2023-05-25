@@ -18,6 +18,18 @@
 .updateButton {
   font-size: 20px;
   padding: 2px 2px;
-
+  margin: 2px 5px;
   border: solid 3px #000000;
+}
+
+.completeButton {
+  font-size: 20px;
+  padding: 2px 2px;
+  margin: 2px 5px;
+  border: solid 3px #000000;
+}
+
+.completeText {
+  text-decoration: line-through;
+  opacity: 0.5;
 }

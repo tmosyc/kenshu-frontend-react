@@ -1,4 +1,7 @@
 {
   "name": "kenshu-frontend",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "classnames": "^2.3.2"
+  }
 }
