@@ -8,7 +8,8 @@ const fetchList = () =>
 
 export const App = () => {
   const queryClient = useQueryClient();
-  const [id, setId] = useState({ id: "", changeType: "" });
+  //const [id, setId] = useState({ id: "", changeType: "" });
+  const [id, setId] = useState("");
   const [text, setText] = useState("");
   const now = new Date();
 
@@ -30,18 +31,19 @@ export const App = () => {
 
   const updateTask = (e, taskId) => {
     e.preventDefault();
-    setId({ id: "", changeType: "update" });
+    setId(null);
+    //setId({ id: "", changeType: "update" });
     axios({
       method: "patch",
       url: `http://localhost:8000/api/tasks/${taskId}`,
-      data: { title: text, finishedAt: null },
+      data: { title: text },
     }).then(() => {
       mutation.mutate();
     });
   };
 
   const updateText = (taskId, taskTitle) => {
-    if (id.id === taskId && id.changeType === "update") {
+    if (id === taskId) {
       return (
         <StrictMode>
           <form onSubmit={(e) => updateTask(e, taskId)}>
@@ -87,7 +89,7 @@ export const App = () => {
             </p>
             <button
               className={classNames.updateButton}
-              onClick={() => setId({ id: task.id, changeType: "update" })}
+              onClick={() => setId(task.id)}
             >
               {updateText(task.id, task.title)}
               編集
