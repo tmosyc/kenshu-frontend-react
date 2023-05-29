@@ -6,9 +6,26 @@ import axios from "axios";
 const fetchList = () =>
   fetch("http://localhost:8000/api/tasks").then((res) => res.json());
 
+const EditForm = ({ id, taskId, taskTitle, updateTask, setText }) => {
+  if (id === taskId) {
+    return (
+      <StrictMode>
+        <form onSubmit={(e) => updateTask(e, taskId)}>
+          <input
+            type="text"
+            placeholder={taskTitle}
+            onChange={(event) => setText(event.target.value)}
+          ></input>
+        </form>
+      </StrictMode>
+    );
+  }
+};
+
 export const App = () => {
   const queryClient = useQueryClient();
-  const [id, setId] = useState({ id: "", changeType: "" });
+  //const [id, setId] = useState({ id: "", changeType: "" });
+  const [id, setId] = useState("");
   const [text, setText] = useState("");
   const now = new Date();
 
@@ -26,44 +43,39 @@ export const App = () => {
     },
   });
 
-  if (isLoading || !data) return <p>Loading...</p>;
+  const updateMutation = useMutation({
+    mutationFn: (taskId) => {
+      return axios({
+        method: "patch",
+        url: `http://localhost:8000/api/tasks/${taskId}`,
+        data: { title: text },
+      });
+    },
+    onSuccess: () => {
+      mutation.mutate();
+    },
+  });
 
   const updateTask = (e, taskId) => {
     e.preventDefault();
-    setId({ id: "", changeType: "update" });
-    axios({
-      method: "patch",
-      url: `http://localhost:8000/api/tasks/${taskId}`,
-      data: { title: text, finishedAt: null },
-    }).then(() => {
-      mutation.mutate();
-    });
+    setId(null);
+    updateMutation.mutate(taskId);
   };
 
-  const updateText = (taskId, taskTitle) => {
-    if (id.id === taskId && id.changeType === "update") {
-      return (
-        <StrictMode>
-          <form onSubmit={(e) => updateTask(e, taskId)}>
-            <input
-              type="text"
-              placeholder={taskTitle}
-              onChange={(event) => setText(event.target.value)}
-            ></input>
-          </form>
-        </StrictMode>
-      );
-    }
-  };
+  const completeMutation = useMutation({
+    mutationFn: (taskId) => {
+      return axios({
+        method: "patch",
+        url: `http://localhost:8000/api/tasks/${taskId}`,
+        data: { finishedAt: now },
+      });
+    },
+    onSuccess() {
+      refetch();
+    },
+  });
 
-  const finish = async (taskId: string) => {
-    await axios({
-      method: "patch",
-      url: `http://localhost:8000/api/tasks/${taskId}`,
-      data: { finishedAt: now },
-    });
-    refetch();
-  };
+  if (isLoading || !data) return <p>Loading...</p>;
 
   return (
     <StrictMode>
@@ -87,15 +99,21 @@ export const App = () => {
             </p>
             <button
               className={classNames.updateButton}
-              onClick={() => setId({ id: task.id, changeType: "update" })}
+              onClick={() => setId(task.id)}
             >
-              {updateText(task.id, task.title)}
+              <EditForm
+                id={id}
+                taskId={task.id}
+                taskTitle={task.title}
+                setText={setText}
+                updateTask={updateTask}
+              />
               編集
             </button>
 
             <button
               className={classNames.completeButton}
-              onClick={() => finish(task.id)}
+              onClick={() => completeMutation.mutate(task.id)}
             >
               完了
             </button>
