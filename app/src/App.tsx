@@ -24,7 +24,6 @@ const EditForm = ({ id, taskId, taskTitle, updateTask, setText }) => {
 
 export const App = () => {
   const queryClient = useQueryClient();
-  //const [id, setId] = useState({ id: "", changeType: "" });
   const [id, setId] = useState("");
   const [text, setText] = useState("");
   const now = new Date();
@@ -110,7 +109,6 @@ export const App = () => {
               />
               編集
             </button>
-
             <button
               className={classNames.completeButton}
               onClick={() => completeMutation.mutate(task.id)}
