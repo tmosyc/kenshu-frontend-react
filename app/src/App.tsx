@@ -3,7 +3,6 @@ import { StrictMode, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
-// usequeryの非同期関数
 const fetchList = () =>
   fetch("http://localhost:8000/api/tasks").then((res) => res.json());
 
@@ -28,7 +27,8 @@ export const App = () => {
   const [id, setId] = useState("");
   const [text, setText] = useState("");
   const now = new Date();
-  const { data, isLoading, error } = useQuery({
+
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["tasks"],
     queryFn: fetchList,
   });
@@ -47,7 +47,7 @@ export const App = () => {
       return axios({
         method: "patch",
         url: `http://localhost:8000/api/tasks/${taskId}`,
-        data: { title: text, finishedAt: now },
+        data: { title: text },
       });
     },
     onSuccess: () => {
@@ -61,7 +61,19 @@ export const App = () => {
     updateMutation.mutate(taskId);
   };
 
-  //dataが入っているかの判定
+  const completeMutation = useMutation({
+    mutationFn: (taskId) => {
+      return axios({
+        method: "patch",
+        url: `http://localhost:8000/api/tasks/${taskId}`,
+        data: { finishedAt: now },
+      });
+    },
+    onSuccess() {
+      refetch();
+    },
+  });
+
   if (isLoading || !data) return <p>Loading...</p>;
 
   return (
@@ -75,15 +87,19 @@ export const App = () => {
         >
           タスクの追加
         </button>
-        {/* データの表示 */}
         {data.tasks.map((task) => (
           <li className={classNames.title} key={task.id}>
-            {task.title}
+            <p
+              className={
+                task.finishedAt !== null ? classNames.completeText : ""
+              }
+            >
+              {task.title}
+            </p>
             <button
               className={classNames.updateButton}
               onClick={() => setId(task.id)}
             >
-              {/* {updateText(task.id, task.title)} */}
               <EditForm
                 id={id}
                 taskId={task.id}
@@ -92,6 +108,12 @@ export const App = () => {
                 updateTask={updateTask}
               />
               編集
+            </button>
+            <button
+              className={classNames.completeButton}
+              onClick={() => completeMutation.mutate(task.id)}
+            >
+              完了
             </button>
           </li>
         ))}
